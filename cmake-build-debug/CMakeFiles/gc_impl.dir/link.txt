@@ -1,0 +1,1 @@
+/usr/bin/cc -g  -Wl,--enable-auto-import CMakeFiles/gc_impl.dir/mark-sweep/gc.c.o CMakeFiles/gc_impl.dir/mark-sweep/test.c.o  -o gc_impl.exe -Wl,--out-implib,libgc_impl.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
