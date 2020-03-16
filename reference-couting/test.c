@@ -62,17 +62,16 @@ int main(int argc, char *argv[]){
     emp *_emp1 = (emp*)gc_alloc(&emp_object_class);
     gc_add_root(_emp1);
     dept *_dept1 = (dept*)gc_alloc(&dept_object_class);
-    printf("pre update\n");
     gc_update_ptr(&_emp1->dept,_dept1);
 
 
-    printf("pre update2\n");
     dept *_dept2 = (dept*)gc_alloc(&dept_object_class);
+    printf("更新指针，原指针引用的对象被回收\n");
     gc_update_ptr(&_emp1->dept,_dept2);
 
     emp *_emp2 = (emp*)gc_alloc(&emp_object_class);
     gc_add_root(_emp2);
 
-    printf("pre remove\n");
+    printf("删除emp1指针，emp1/dept2被回收\n");
     gc_remove_root(_emp1);
 }
