@@ -12,6 +12,16 @@ node *next_free;
 node *head;
 int _rp;
 
+void reclaim(object *obj);
+
+void inc_ref_cnt(object *obj);
+
+void dec_ref_cnt(object *obj);
+
+int resolve_heap_size(int size);
+
+node *find_idle_node();
+
 
 void reclaim(object *obj) {
     //回收对象所属的node
@@ -33,7 +43,7 @@ void reclaim(object *obj) {
  * @param obj 被引用的对象
  */
 void inc_ref_cnt(object *obj) {
-    if(!obj){
+    if (!obj) {
         return;
     }
     obj->ref_cnt++;
@@ -44,7 +54,7 @@ void inc_ref_cnt(object *obj) {
  * @param obj 原引用
  */
 void dec_ref_cnt(object *obj) {
-    if(!obj){
+    if (!obj) {
         return;
     }
     obj->ref_cnt--;
@@ -58,18 +68,20 @@ void dec_ref_cnt(object *obj) {
     }
 }
 
-void gc_update_ptr(void **ptr, object *obj) {
+void gc_update_ptr(object **ptr, void *obj) {
     inc_ref_cnt(obj);
     dec_ref_cnt(*ptr);
     *ptr = obj;
 }
 
-void gc_add_root(object *obj){
-    inc_ref_cnt(obj);
+void gc_add_root(void *obj) {
+    inc_ref_cnt((object *) obj);
 }
-void gc_remove_root(object *obj){
-    dec_ref_cnt(obj);
+
+void gc_remove_root(void *obj) {
+    dec_ref_cnt((object *) obj);
 }
+
 int resolve_heap_size(int size) {
     if (size > MAX_HEAP_SIZE) {
         size = MAX_HEAP_SIZE;
@@ -105,13 +117,6 @@ void gc_init(int size) {
 
 node *find_idle_node() {
     for (next_free = head; next_free && next_free->used; next_free = next_free->next) {}
-
-    //还找不到就触发回收
-//    if(!next_free){
-//        gc();
-//    }
-//
-//    for (next_free = head->next;next_free&&next_free->used;next_free = next_free->next){}
 
     //再找不到真的没了……
     if (!next_free) {

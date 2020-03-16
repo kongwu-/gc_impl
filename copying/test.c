@@ -4,19 +4,21 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "gc.h"
+#include "./gc.h"
 
 #define MAX_ROOTS 100
 
 typedef struct dept {
     class_descriptor *class;//对象对应的类型
-    byte marked;//标记对象是否可达（reachable）
+    byte copied;//已拷贝标识
+    object *forwarding;//目标位置
     int id;
 } dept;
 
 typedef struct emp {
     class_descriptor *class;//对象对应的类型
-    byte marked;//标记对象是否可达（reachable）
+    byte copied;//已拷贝标识
+    object *forwarding;//目标位置
     int id;
     dept *dept;
 } emp;
@@ -39,18 +41,22 @@ class_descriptor dept_object_class = {
 };
 
 int main(int argc, char *argv[]) {
-    gc_init(256 * 3);
+    gc_init((emp_object_class.size + dept_object_class.size) * 3 * 2);
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 4; ++i) {
         printf("loop %d\n" + i);
         emp *_emp1 = (emp *) gc_alloc(&emp_object_class);
         gc_add_root(_emp1);
         dept *_dept1 = (dept *) gc_alloc(&dept_object_class);
         _emp1->dept = _dept1;
+
+        if (i == 2) {
+            printf("即将内存溢出\n");
+        }
         emp *_emp2 = (emp *) gc_alloc(&emp_object_class);
         dept *_dept2 = (dept *) gc_alloc(&dept_object_class);
         _emp2->dept = _dept2;
 
-        gc();
+//        gc();
     }
 }

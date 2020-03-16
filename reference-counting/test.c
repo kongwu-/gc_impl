@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include "gc.h"
 
 #define MAX_ROOTS 100
@@ -38,19 +39,23 @@ class_descriptor dept_object_class = {
         NULL
 };
 
+
 int main(int argc, char *argv[]) {
     gc_init(256 * 3);
 
-    for (int i = 0; i < 3; ++i) {
-        printf("loop %d\n" + i);
-        emp *_emp1 = (emp *) gc_alloc(&emp_object_class);
-        gc_add_root(_emp1);
-        dept *_dept1 = (dept *) gc_alloc(&dept_object_class);
-        _emp1->dept = _dept1;
-        emp *_emp2 = (emp *) gc_alloc(&emp_object_class);
-        dept *_dept2 = (dept *) gc_alloc(&dept_object_class);
-        _emp2->dept = _dept2;
+    emp *_emp1 = (emp *) gc_alloc(&emp_object_class);
+    gc_add_root(_emp1);
+    dept *_dept1 = (dept *) gc_alloc(&dept_object_class);
+    gc_update_ptr((object **) &_emp1->dept, _dept1);
 
-        gc();
-    }
+
+    dept *_dept2 = (dept *) gc_alloc(&dept_object_class);
+    printf("更新指针，原指针引用的对象被回收\n");
+    gc_update_ptr((object **) &_emp1->dept, _dept2);
+
+    emp *_emp2 = (emp *) gc_alloc(&emp_object_class);
+    gc_add_root(_emp2);
+
+    printf("删除emp1指针，emp1/dept2被回收\n");
+    gc_remove_root(_emp1);
 }

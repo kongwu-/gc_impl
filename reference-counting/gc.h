@@ -2,10 +2,10 @@
 // Created by jiangxin on 2020/3/15.
 //
 
-#ifndef GC_IMPL_GC_H
-#define GC_IMPL_GC_H
+#ifndef GC_IMPL_REFERENCE_COUNTING_GC_H
+#define GC_IMPL_REFERENCE_COUNTING_GC_H
 
-#endif //GC_IMPL_GC_H
+#endif //GC_IMPL_REFERENCE_COUNTING_GC_H
 
 /**
  * 1字节的byte类型，用来做标识位
@@ -13,10 +13,11 @@
 typedef unsigned char byte;
 
 
+
 /**
  * 类描述
  */
-typedef struct class_descriptor {
+typedef struct class_descriptor{
     char *name;//类名称
     int size;//类大小，即对应sizeof(struct)
     int num_fields;//属性数量
@@ -29,10 +30,9 @@ typedef struct class_descriptor {
  * C中没有继承的概念，不过可以通过定义相同属性来实现，所有“继承”Object的struct，都需要将class/marked属性定义在开头
  */
 typedef struct _object object;
-
 struct _object {
     class_descriptor *class;//对象对应的类型
-    byte marked;//标记对象是否可达（reachable）
+    int ref_cnt;//对象被引用的次数，"人气"
 };
 
 /**
@@ -42,31 +42,25 @@ struct _object {
  * 每个单元只存放一个Object
  */
 typedef struct _node node;
-struct _node {
+struct _node{
     node *next;
     byte used;//是否使用
     int size;
     object *data;//单元中的数据
 };
 
-#define MAX_ROOTS 100
-
 #define NODE_SIZE 128//free-list单元大小(B)
 
 #define MAX_HEAP_SIZE MAX_ROOTS*4*NODE_SIZE//50MB
 
+#define MAX_ROOTS 100
 
 const static byte TRUE = 1;
 const static byte FALSE = 0;
-/**
- * GC ROOTS
- */
-extern object *_roots[MAX_ROOTS];
 
 /**
  * GC ROOT 的当前下标，即记录到了第几个元素
  */
-extern int _rp;
 extern node *next_free;
 extern node *head;
 /**
@@ -88,11 +82,6 @@ extern node *head;
  * @param size
  */
 extern void gc_init(int size);
-
-/**
- * 执行GC
- */
-extern void gc();
 
 /**
  * GC结束，彻底清理堆
@@ -119,16 +108,27 @@ extern char *gc_get_state();
  */
 extern int gc_num_roots();
 
+/**
+ * 修改引用
+ * @param ptr 原指针
+ * @param obj 新对象指针
+ */
+extern void gc_update_ptr(object** ptr, void *obj);
 
+/**
+ * 将对象添加到GC ROOTS，这里因为没有tracing的需求，所以直接更新计数器，不再维护roots
+ */
+extern void gc_add_root(void *p);
+
+/**
+ * 将对象从GC ROOTS移除，模拟变量出栈
+ * @param p
+ */
+extern void gc_remove_root(void *p);
 /**
  * 暂存GC ROOTS下标
  */
 #define gc_save_rp          int __rp = _rp;
-
-/**
- * 将对象添加到GC ROOTS
- */
-#define gc_add_root(p)    _roots[_rp++] = (object *)(p);
 
 /**
  * 恢复GC ROOTS下标

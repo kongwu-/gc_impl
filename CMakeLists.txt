@@ -3,11 +3,21 @@ project(gc_impl C)
 
 set(CMAKE_C_STANDARD 99)
 
-#include_directories(generational)
-#include_directories(mark-sweep)
-include_directories(reference-couting)
+include_directories(mark-sweep)
+include_directories(reference-counting)
+include_directories(copying)
 
-add_executable(gc_impl
-        reference-couting/gc.c
-        reference-couting/gc.h
-        reference-couting/test.c)
+add_executable(mark-sweep
+        mark-sweep/gc.c
+        mark-sweep/gc.h
+        mark-sweep/test.c)
+
+add_executable(reference-counting
+        reference-counting/gc.c
+        reference-counting/gc.h
+        reference-counting/test.c)
+
+add_executable(copying
+        copying/gc.c
+        copying/gc.h
+        copying/test.c)
