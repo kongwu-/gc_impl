@@ -22,12 +22,10 @@ byte unset_mark(object *obj){return obj->marked = FALSE;}
 
 int resolve_heap_size(int size){
     if(size > MAX_HEAP_SIZE){
-        printf("OutOfMemory!\n");
-        abort();
+        size = MAX_HEAP_SIZE;
     }
     if(size < NODE_SIZE){
         return NODE_SIZE;
-
     }
     return size/NODE_SIZE*NODE_SIZE;
 }
@@ -143,9 +141,3 @@ void gc(){
     }
     sweep();
 }
-
-
-
-//void free(){
-//
-//}

@@ -67,7 +67,8 @@ extern object *_roots[MAX_ROOTS];
  * GC ROOT 的当前下标，即记录到了第几个元素
  */
 extern int _rp;
-
+extern node *next_free;
+extern node *head;
 /**
  * malloc的堆（起始）地址
  */

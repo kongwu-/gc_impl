@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
         gc_add_root(_emp1);
         dept *_dept1 = (dept*)gc_alloc(&dept_object_class);
         _emp1->dept = _dept1;
-
+        gc_add_root(p);
         emp *_emp2 = (emp*)gc_alloc(&emp_object_class);
         dept *_dept2 = (dept*)gc_alloc(&dept_object_class);
         _emp2->dept = _dept2;
