@@ -13,5 +13,5 @@
 ## mark-compact
 标记-整理算法
 
-##Generational
+## Generational
 分代回收，年轻代使用复制算法，老年代使用标记-清除算法
