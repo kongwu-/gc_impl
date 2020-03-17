@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "gc.h"
 
 object *_roots[MAX_ROOTS];
@@ -23,11 +24,13 @@ void copying();
 
 object *copy(object *obj);
 
-void adjust_ref();
+void update_ref();
 
 void swap_space();
 
 int resolve_heap_size(int size);
+
+void update_ref();
 
 /**
  * 交换from/to
@@ -152,7 +155,7 @@ void copying() {
     }
 
     //更新引用
-    adjust_ref();
+    update_ref();
 
     //清空from，并交换from/to
     swap_space();
@@ -162,7 +165,7 @@ void copying() {
  * 更新引用
  * 将复制后的对象引用从from区更新到to区
  */
-void adjust_ref() {
+void update_ref() {
     int p = 0;
     //遍历to，即复制的目标空间
     while (p < next_forwarding_offset) {

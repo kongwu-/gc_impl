@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include "./gc.h"
 
 #define MAX_ROOTS 100
@@ -44,7 +45,7 @@ int main(int argc, char *argv[]) {
     gc_init((emp_object_class.size + dept_object_class.size) * 3 * 2);
 
     for (int i = 0; i < 4; ++i) {
-        printf("loop %d\n" + i);
+        printf("loop %d\n", i);
         emp *_emp1 = (emp *) gc_alloc(&emp_object_class);
         gc_add_root(_emp1);
         dept *_dept1 = (dept *) gc_alloc(&dept_object_class);
