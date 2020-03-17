@@ -30,7 +30,7 @@ typedef struct class_descriptor {
 typedef struct _object object;
 struct _object {
     class_descriptor *class;//对象对应的类型
-    byte copied;//已拷贝标识
+    byte forwarded;//已拷贝标识
     object *forwarding;//目标位置
 };
 

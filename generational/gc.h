@@ -30,11 +30,25 @@ typedef struct class_descriptor {
 typedef struct _object object;
 struct _object {
     class_descriptor *class;//对象对应的类型
-    byte copied;//已拷贝标识
+    byte forwarded;//已拷贝标识
     byte marked;//reachable标识
     byte remembered;//已经记录在rs中的标识
     object *forwarding;//目标位置
     int age;//对象年龄
+};
+
+/**
+ * free-list的单元节点
+ * 为了实现简单，在此算法中不考虑“碎片化”的问题
+ * 将单元的大小设置的足够大，并且不允许分配超过此单元大小的内存
+ * 每个单元只存放一个Object
+ */
+typedef struct _node node;
+struct _node {
+    node *next;
+    byte used;//是否使用
+    int size;
+    object *data;//单元中的数据
 };
 
 #define MAX_ROOTS 100
@@ -79,7 +93,7 @@ extern int heap_size;
  * @param size
  * @param new_ratio 新老年代的比例
  */
-extern void gc_init(int size,int young_ratio);
+extern void gc_init(int size);
 
 /**
  * 执行GC
@@ -101,10 +115,11 @@ extern object *gc_alloc(class_descriptor *class);
 
 /**
  * 修改引用
- * @param ptr 原指针
- * @param obj 新对象指针
+ * @param obj 原对象
+ * @param ptr 原对象的属性指针
+ * @param new_obj 新对象指针
  */
-extern void gc_update_ptr(object** ptr, void *obj);
+void gc_update_ptr(object *obj,object **field_ref, void *new_obj);
 
 /**
  * DUMP GC状态

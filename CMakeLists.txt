@@ -7,6 +7,7 @@ include_directories(mark-sweep)
 include_directories(reference-counting)
 include_directories(copying)
 include_directories(mark-compact)
+include_directories(generational)
 
 add_executable(mark-sweep
         mark-sweep/gc.c
@@ -27,3 +28,8 @@ add_executable(mark-compact
         mark-compact/gc.c
         mark-compact/gc.h
         mark-compact/test.c)
+
+add_executable(generational
+        generational/gc.c
+        generational/gc.h
+        generational/test.c)

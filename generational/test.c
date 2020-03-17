@@ -10,7 +10,7 @@
 
 typedef struct dept {
     class_descriptor *class;//对象对应的类型
-    byte copied;//已拷贝标识
+    byte forwarded;//已拷贝标识
     byte marked;//reachable标识
     byte remembered;//已经记录在rs中的标识
     object *forwarding;//目标位置
@@ -20,7 +20,7 @@ typedef struct dept {
 
 typedef struct emp {
     class_descriptor *class;//对象对应的类型
-    byte copied;//已拷贝标识
+    byte forwarded;//已拷贝标识
     byte marked;//reachable标识
     byte remembered;//已经记录在rs中的标识
     object *forwarding;//目标位置
@@ -47,22 +47,20 @@ class_descriptor dept_object_class = {
 };
 
 int main(int argc, char *argv[]) {
-    gc_init((emp_object_class.size + dept_object_class.size) * 3 * 2);
+    gc_init(1000*4);//分配后，实际可用968
 
-    for (int i = 0; i < 4; ++i) {
-        printf("loop %d\n" + i);
+    for (int i = 0; i < 5; ++i) {
+        printf("loop %d\n",i);
         emp *_emp1 = (emp *) gc_alloc(&emp_object_class);
-        gc_add_root(_emp1);
+
         dept *_dept1 = (dept *) gc_alloc(&dept_object_class);
         _emp1->dept = _dept1;
-
-        if (i == 2) {
-            printf("即将内存溢出\n");
-        }
+        gc_add_root(_dept1);
         emp *_emp2 = (emp *) gc_alloc(&emp_object_class);
         dept *_dept2 = (dept *) gc_alloc(&dept_object_class);
         _emp2->dept = _dept2;
 
-//        gc();
+        gc_get_state();
+
     }
 }

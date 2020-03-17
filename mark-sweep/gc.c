@@ -51,16 +51,6 @@ node *init_free_list(int free_list_size) {
     return head;
 }
 
-void gc_init(int size) {
-    int heap_size = resolve_heap_size(size);
-    int free_list_size = heap_size / NODE_SIZE;
-    head = init_free_list(free_list_size);
-
-    _rp = 0;
-    next_free = head;
-}
-
-
 node *find_idle_node() {
     for (next_free = head; next_free && next_free->used; next_free = next_free->next) {}
 
@@ -77,6 +67,18 @@ node *find_idle_node() {
         abort();
     }
 }
+
+void gc_init(int size) {
+    int heap_size = resolve_heap_size(size);
+    int free_list_size = heap_size / NODE_SIZE;
+    head = init_free_list(free_list_size);
+
+    _rp = 0;
+    next_free = head;
+}
+
+
+
 
 object *gc_alloc(class_descriptor *class) {
 

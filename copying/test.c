@@ -11,14 +11,14 @@
 
 typedef struct dept {
     class_descriptor *class;//对象对应的类型
-    byte copied;//已拷贝标识
+    byte forwarded;//已拷贝标识
     object *forwarding;//目标位置
     int id;
 } dept;
 
 typedef struct emp {
     class_descriptor *class;//对象对应的类型
-    byte copied;//已拷贝标识
+    byte forwarded;//已拷贝标识
     object *forwarding;//目标位置
     int id;
     dept *dept;

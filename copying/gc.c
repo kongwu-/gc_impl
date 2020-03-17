@@ -40,7 +40,7 @@ void adjust_ref();
 /**
  * 交换from/to
  */
-void new_swap_space();
+void swap(void **src,void **dst);
 
 /**
  * 处理初始值
@@ -49,21 +49,11 @@ void new_swap_space();
  */
 int resolve_heap_size(int size);
 
-
-void new_swap_space() {
-
-    //清空from
-    memset(from, 0, heap_half_size);
-
-    //交换from/to
-    void *temp = from;
-    from = to;
-    to = temp;
-
-    //将free_offset更新为复制时使用的next_forwarding_offset
-    next_free_offset = next_forwarding_offset;
+void swap(void **src, void **dst) {
+    object *temp = *src;
+    *src = *dst;
+    *dst = temp;
 }
-
 
 int resolve_heap_size(int size) {
     if (size > MAX_HEAP_SIZE) {
@@ -104,7 +94,7 @@ object *gc_alloc(class_descriptor *class) {
 
     //初始化
     new_obj->class = class;
-    new_obj->copied = FALSE;
+    new_obj->forwarded = FALSE;
     new_obj->forwarding = NULL;
 
     for (int i = 0; i < new_obj->class->num_fields; ++i) {
@@ -121,18 +111,18 @@ object *copy(object *obj) {
     if (!obj) { return NULL; }
 
     //由于一个对象可能会被多个对象引用，所以此处判断，避免重复复制
-    if (!obj->copied) {
+    if (!obj->forwarded) {
 
         //计算复制后的指针
-        object *forwarded = (object *) (next_forwarding_offset + to);
+        object *forwarding = (object *) (next_forwarding_offset + to);
 
         //赋值
-        memcpy(forwarded, obj, obj->class->size);
+        memcpy(forwarding, obj, obj->class->size);
 
-        obj->copied = TRUE;
+        obj->forwarded = TRUE;
 
         //将复制后的指针，写入原对象的forwarding pointer，为最后更新引用做准备
-        obj->forwarding = forwarded;
+        obj->forwarding = forwarding;
 
         //复制后，移动to区forwarding偏移
         next_forwarding_offset += obj->class->size;
@@ -141,7 +131,7 @@ object *copy(object *obj) {
         for (int i = 0; i < obj->class->num_fields; i++) {
             copy(*(object **) ((void *) obj + obj->class->field_offsets[i]));
         }
-        return forwarded;
+        return forwarding;
     }
 
     return obj->forwarding;
@@ -161,7 +151,7 @@ void copying() {
     adjust_ref();
 
     //清空from，并交换from/to
-    new_swap_space();
+    swap(&from,&to);
 }
 
 
