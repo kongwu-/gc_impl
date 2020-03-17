@@ -42,6 +42,7 @@ class_descriptor dept_object_class = {
 };
 
 int main(int argc, char *argv[]) {
+
     gc_init((emp_object_class.size + dept_object_class.size) * 3);
 
     for (int i = 0; i < 4; ++i) {

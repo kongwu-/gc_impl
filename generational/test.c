@@ -11,14 +11,20 @@
 typedef struct dept {
     class_descriptor *class;//对象对应的类型
     byte copied;//已拷贝标识
+    byte marked;//reachable标识
+    byte remembered;//已经记录在rs中的标识
     object *forwarding;//目标位置
+    int age;//对象年龄
     int id;
 } dept;
 
 typedef struct emp {
     class_descriptor *class;//对象对应的类型
     byte copied;//已拷贝标识
+    byte marked;//reachable标识
+    byte remembered;//已经记录在rs中的标识
     object *forwarding;//目标位置
+    int age;//对象年龄
     int id;
     dept *dept;
 } emp;

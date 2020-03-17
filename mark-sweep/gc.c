@@ -14,12 +14,6 @@ node *next_free;
 node *head;
 int _rp;
 
-byte is_marked(object *obj) { return obj->marked == TRUE; }
-
-byte set_mark(object *obj) { return obj->marked = TRUE; }
-
-byte unset_mark(object *obj) { return obj->marked = FALSE; }
-
 int resolve_heap_size(int size);
 
 node *init_free_list(int free_list_size);
@@ -156,3 +150,8 @@ void gc() {
     }
     sweep();
 }
+
+int gc_num_roots() {
+    return _rp;
+}
+

@@ -43,15 +43,17 @@ int main(int argc, char *argv[]) {
     gc_init(256 * 3);
 
     for (int i = 0; i < 3; ++i) {
-        printf("loop %d\n" + i);
+        printf("loop %d\n" ,i);
         emp *_emp1 = (emp *) gc_alloc(&emp_object_class);
         gc_add_root(_emp1);
         dept *_dept1 = (dept *) gc_alloc(&dept_object_class);
         _emp1->dept = _dept1;
+        if(i==2){
+            printf("即将内存溢出\n");
+        }
         emp *_emp2 = (emp *) gc_alloc(&emp_object_class);
         dept *_dept2 = (dept *) gc_alloc(&dept_object_class);
         _emp2->dept = _dept2;
 
-        gc();
     }
 }

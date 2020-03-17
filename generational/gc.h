@@ -31,12 +31,23 @@ typedef struct _object object;
 struct _object {
     class_descriptor *class;//对象对应的类型
     byte copied;//已拷贝标识
+    byte marked;//reachable标识
+    byte remembered;//已经记录在rs中的标识
     object *forwarding;//目标位置
+    int age;//对象年龄
 };
 
 #define MAX_ROOTS 100
 
+#define MAX_AGE 4//晋升年龄，达到该值就晋升
+
 #define MAX_HEAP_SIZE 1024*1024*10//10MB
+
+#define NEW_RATIO 2//新生代和老年代配比，2代表新生代:老年代=2:8
+
+#define SURVIVOR_RATIO 8 //新生代中Eden和from/to区配比，8代表Eden:From:To=8:1:1
+
+#define NODE_SIZE 128//free-list单元大小(B)
 
 
 const static byte TRUE = 1;
@@ -47,9 +58,15 @@ const static byte FALSE = 0;
 extern object *_roots[MAX_ROOTS];
 
 /**
+ * remembered set
+ */
+extern object *_rs[MAX_ROOTS];
+
+/**
  * GC ROOT 的当前下标，即记录到了第几个元素
  */
 extern int _rp;
+extern int _rsp;
 
 /**
  * 堆总大小
@@ -60,8 +77,9 @@ extern int heap_size;
 /**
  * 初始化GC
  * @param size
+ * @param new_ratio 新老年代的比例
  */
-extern void gc_init(int size);
+extern void gc_init(int size,int young_ratio);
 
 /**
  * 执行GC
@@ -80,6 +98,13 @@ extern void gc_done();
  * @return 分配的对象指针
  */
 extern object *gc_alloc(class_descriptor *class);
+
+/**
+ * 修改引用
+ * @param ptr 原指针
+ * @param obj 新对象指针
+ */
+extern void gc_update_ptr(object** ptr, void *obj);
 
 /**
  * DUMP GC状态
@@ -103,6 +128,11 @@ extern int gc_num_roots();
  * 将对象添加到GC ROOTS
  */
 #define gc_add_root(p)    _roots[_rp++] = (object *)(p);
+
+/**
+ * 将对象添加到remembered set
+ */
+#define gc_add_rs(p)    _rs[_rsp++] = (object *)(p);
 
 /**
  * 恢复GC ROOTS下标

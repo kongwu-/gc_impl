@@ -11,28 +11,46 @@ object *_roots[MAX_ROOTS];
 
 int _rp;
 void *heap;//堆指针
-void *from;
-void *to;
+void *from;//from指针
+void *to;//to指针
 int next_forwarding_offset;//复制目标区域的free pointer
 object *_roots[MAX_ROOTS];
 int next_free_offset;//下一个空闲内存地址（相对位置）
 int heap_size;//堆容量
 int heap_half_size;//堆容量
 
+/**
+ * 复制回收
+ */
 void copying();
 
+/**
+ * 将对象复制到to
+ * @param obj
+ * @return 复制后的对象指针
+ */
 object *copy(object *obj);
 
+/**
+ * 更新引用
+ * 将复制后的对象引用从from区更新到to区
+ */
 void adjust_ref();
-
-void swap_space();
-
-int resolve_heap_size(int size);
 
 /**
  * 交换from/to
  */
-void swap_space() {
+void new_swap_space();
+
+/**
+ * 处理初始值
+ * @param size 初始堆大小
+ * @return 一半堆的大小
+ */
+int resolve_heap_size(int size);
+
+
+void new_swap_space() {
 
     //清空from
     memset(from, 0, heap_half_size);
@@ -46,11 +64,7 @@ void swap_space() {
     next_free_offset = next_forwarding_offset;
 }
 
-/**
- * 处理初始值
- * @param size 初始堆大小
- * @return 一半堆的大小
- */
+
 int resolve_heap_size(int size) {
     if (size > MAX_HEAP_SIZE) {
         size = MAX_HEAP_SIZE;
@@ -102,11 +116,6 @@ object *gc_alloc(class_descriptor *class) {
     return new_obj;
 }
 
-/**
- * 将对象复制到to
- * @param obj
- * @return 复制后的对象指针
- */
 object *copy(object *obj) {
 
     if (!obj) { return NULL; }
@@ -138,9 +147,6 @@ object *copy(object *obj) {
     return obj->forwarding;
 }
 
-/**
- * 复制回收
- */
 void copying() {
     next_forwarding_offset = 0;
     //遍历GC ROOTS
@@ -155,13 +161,10 @@ void copying() {
     adjust_ref();
 
     //清空from，并交换from/to
-    swap_space();
+    new_swap_space();
 }
 
-/**
- * 更新引用
- * 将复制后的对象引用从from区更新到to区
- */
+
 void adjust_ref() {
     int p = 0;
     //遍历to，即复制的目标空间

@@ -157,8 +157,12 @@ void move_obj() {
         p = p + obj->class->size;
     }
 
+    //清空移动后的间隙
+    memset((void *)(new_next_free_offset+heap),0,next_free_offset-new_next_free_offset);
+
     //移动完成后，更新free pointer为新的边界指针
     next_free_offset = new_next_free_offset;
+
 }
 
 void compact() {

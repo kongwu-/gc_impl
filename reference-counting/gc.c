@@ -12,14 +12,30 @@ node *next_free;
 node *head;
 int _rp;
 
+/**
+ * 回收对象
+ * @param obj
+ */
 void reclaim(object *obj);
 
+/**
+ * 增加计数，不考虑上溢情况
+ * @param obj 被引用的对象
+ */
 void inc_ref_cnt(object *obj);
 
+/**
+ * 计数器自减
+ * @param obj 原引用
+ */
 void dec_ref_cnt(object *obj);
 
 int resolve_heap_size(int size);
 
+/**
+ * 查找空闲内存单元
+ * @return
+ */
 node *find_idle_node();
 
 
@@ -38,10 +54,7 @@ void reclaim(object *obj) {
     printf("collection ...\n");
 }
 
-/**
- * 增加计数，不考虑上溢情况
- * @param obj 被引用的对象
- */
+
 void inc_ref_cnt(object *obj) {
     if (!obj) {
         return;
@@ -49,10 +62,7 @@ void inc_ref_cnt(object *obj) {
     obj->ref_cnt++;
 }
 
-/**
- * 计数器自减
- * @param obj 原引用
- */
+
 void dec_ref_cnt(object *obj) {
     if (!obj) {
         return;
