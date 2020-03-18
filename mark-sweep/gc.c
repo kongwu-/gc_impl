@@ -121,8 +121,6 @@ void mark(object *obj) {
 }
 
 void sweep() {
-    int i = 0, step = 0;
-
     for (node *_cur = head; _cur && _cur; _cur = _cur->next) {
         if (!_cur->used)continue;
         object *obj = _cur->data;
