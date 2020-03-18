@@ -58,7 +58,7 @@ void test_minor_gc(){
     dept *_dept1 = (dept *) gc_alloc(&dept_object_class);
 
     //增加此引用会导致survivor容量不足，复制失败
-    gc_update_ptr(_emp1,&_emp1->dept,_dept1);
+    gc_update_ptr((object *)_emp1,(object**)&_emp1->dept,(object *)_dept1);
 
     for (int i = 0; i < 6; ++i) {
         emp *temp_emp = (emp *) gc_alloc(&emp_object_class);
@@ -152,11 +152,13 @@ void test_cross_gen_ref_gc(){
 
     emp *temp_emp = (emp *) gc_alloc(&emp_object_class);
 
-    emp *dept1 = (dept *) gc_alloc(&dept_object_class);
+    dept *dept1 = (dept *) gc_alloc(&dept_object_class);
 
-    gc_update_ptr(_roots[0],&_emp1->dept,dept1);
+    //因为_emp1发生了晋升，所以此处的_emp1是复制前的对象，是一个过期的状态
+    //使用复制后的新_emp1对象
+    gc_update_ptr(_roots[0],(object **)&((emp*)_roots[0])->dept,(object*)dept1);
 
-    //此处有问题，新生代对象dept1丢失了
+    printf("FULL GC...\n");
     gc();
 
     gc_get_state();
@@ -166,9 +168,38 @@ void test_cross_gen_ref_gc(){
  * 测试因晋升导致的跨代引用的回收
  */
 void test_promotion_cross_gen_ref_gc(){
+    gc_init(2000);//分配后，实际可用1936
 
+    emp *_emp1 = (emp *) gc_alloc(&emp_object_class);
+    gc_add_root(_emp1);
+
+    //触发3次新生代GC，然后emp1会晋升至老年代
+    for (int i = 0; i < 31; ++i) {
+        emp *temp_emp = (emp *) gc_alloc(&emp_object_class);
+    }
+
+    //在_emp1晋升前，增加_emp1->dept的引用，创建跨代引用
+    dept *dept1 = (dept *) gc_alloc(&dept_object_class);
+
+    //因为_emp1发生了晋升，所以此处的_emp1是复制前的对象，是一个过期的状态
+    //使用复制后的新_emp1对象
+    gc_update_ptr(_roots[0],(object **)&((emp*)_roots[0])->dept,(object*)dept1);
+
+    printf("emp1晋升\n");
+
+    //此时新生代内存不足，发生GC，_emp1已经经历3次GC，会晋升到老年代，但由于_dept还处于新生代，所以会在_rs中记录这条跨代引用
+    emp *temp_emp = (emp *) gc_alloc(&emp_object_class);
+
+    printf("FULL GC...\n");
+    gc();
+
+    gc_get_state();
 }
 
 int main(int argc, char *argv[]) {
-    test_cross_gen_ref_gc();
+    test_minor_gc();
+//    test_promotion();
+//    test_promotion_old_gc();
+//    test_cross_gen_ref_gc();
+//    test_promotion_cross_gen_ref_gc();
 }

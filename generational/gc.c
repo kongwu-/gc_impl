@@ -288,8 +288,7 @@ void adjust_ref() {
 }
 
 
-void gc_update_ptr(object *obj,object **field_ref, void *new_obj) {
-    *field_ref = new_obj;
+void gc_update_ptr(object *obj,object **field_ref, object *new_obj) {
     write_barrier(obj,field_ref,new_obj);
 }
 
@@ -297,6 +296,7 @@ void write_barrier(object *obj, object **field_ref, object *new_obj) {
     if((void *)obj>=old&&(void *)new_obj<=new_eden+eden_size+survivor_size&&!obj->remembered){
         _rs[_rsp++] = obj;
     }
+    *field_ref = new_obj;
 }
 
 void minor_gc() {

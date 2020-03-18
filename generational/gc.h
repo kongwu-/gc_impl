@@ -119,7 +119,7 @@ extern object *gc_alloc(class_descriptor *class);
  * @param ptr 原对象的属性指针
  * @param new_obj 新对象指针
  */
-void gc_update_ptr(object *obj,object **field_ref, void *new_obj);
+void gc_update_ptr(object *obj,object **field_ref, object *new_obj);
 
 /**
  * DUMP GC状态
