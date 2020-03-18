@@ -53,7 +53,7 @@ struct _node {
 
 #define MAX_ROOTS 100
 
-#define MAX_AGE 4//晋升年龄，达到该值就晋升
+#define MAX_AGE 3//晋升年龄，达到该值就晋升
 
 #define MAX_HEAP_SIZE 1024*1024*10//10MB
 
@@ -153,3 +153,5 @@ extern int gc_num_roots();
  * 恢复GC ROOTS下标
  */
 #define gc_restore_roots    _rp = __rp;
+
+extern void swap(void **src, void **dst) ;

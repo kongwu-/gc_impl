@@ -58,7 +58,7 @@ void write_barrier(object *obj, object **field_ref, object *new_obj);//写入屏
 node *old_init_free_list(int free_list_size) {
     node *head = NULL;
     for (int i = 0; i < free_list_size; ++i) {
-        node *_node = (node *) malloc(NODE_SIZE);
+        node *_node = (node *) (i*NODE_SIZE+old);
         _node->next = head;
         _node->size = NODE_SIZE;
         _node->used = FALSE;
@@ -78,7 +78,7 @@ node *old_find_idle_node() {
         major_gc();
     }
 
-    for (old_next_free = old_head->next; old_next_free && old_next_free->used; old_next_free = old_next_free->next) {}
+    for (old_next_free = old_head; old_next_free && old_next_free->used; old_next_free = old_next_free->next) {}
 
     //再找不到真的没了……
     if (!old_next_free) {
@@ -113,7 +113,6 @@ void gc_init(int size) {
 
     //分配
     heap = malloc(heap_size);
-
 
     //初始化各区域指针
     new = heap;
@@ -225,18 +224,27 @@ object *new_copy(object *obj) {
     if (!obj->forwarded) {
         if (obj->age < MAX_AGE) {
             //计算复制后的指针
-            object *forwarding = (object *) (next_forwarding_offset + new_to);
+            if(next_forwarding_offset+obj->class->size>survivor_size){
+                printf("[New]Copy failed! Insufficient TO space\n");
+                abort();
+            }
+
+            //增加年龄
+            obj->age++;
+
+            object *forwarding = (object *) (next_forwarding_offset+new_to);
 
             //复制
             memcpy(forwarding, obj, obj->class->size);
+
+            forwarding->forwarded = FALSE;
+
+            forwarding->remembered = FALSE;
 
             obj->forwarded = TRUE;
 
             //将复制后的指针，写入原对象的forwarding pointer，为最后更新引用做准备
             obj->forwarding = forwarding;
-
-            //增加年龄
-            obj->age++;
 
             //复制后，移动to区forwarding偏移
             next_forwarding_offset += obj->class->size;
@@ -286,19 +294,20 @@ void gc_update_ptr(object *obj,object **field_ref, void *new_obj) {
 }
 
 void write_barrier(object *obj, object **field_ref, object *new_obj) {
-    if((void *)obj>=old&&(void *)new_obj<new_to&&!obj->remembered){
+    if((void *)obj>=old&&(void *)new_obj<=new_eden+eden_size+survivor_size&&!obj->remembered){
         _rs[_rsp++] = obj;
     }
 }
 
 void minor_gc() {
+    printf("minor gc\n");
     next_forwarding_offset = 0;
     //遍历GC ROOTS
     for (int i = 0; i < _rp; ++i) {
         object *root = _roots[i];
 
         //只处理处于新生代中的root，地址小于to的部分
-        if ((void *) root < (void *) new_to) {
+        if ((void *) root <= (void *) new_eden+eden_size+survivor_size) {
             object *forwarding = new_copy(root);
 
             //先将GC ROOTS引用的对象更新到to空间的新对象
@@ -352,6 +361,8 @@ void minor_gc() {
     memset(new_from,0,survivor_size);
 
     swap((void **)&new_from,(void **)&new_to);
+
+
 }
 
 void promotion(object *obj) {
@@ -363,7 +374,7 @@ void promotion(object *obj) {
         object *ref_obj = *(object **) ((void *) new_obj + new_obj->class->field_offsets[i]);
 
         //如果晋升后的对象还引用着新生代对象，则记录再rs中
-        if((void *)ref_obj<(void *)new_to){
+        if(ref_obj&&(void *)ref_obj<=(void *)old){
             new_obj->remembered = true;
             _rs[_rsp++] = new_obj;
             break;
@@ -374,7 +385,7 @@ void promotion(object *obj) {
 void major_gc(){
     for (int i = 0; i < _rp; ++i) {
         object *root = _roots[i];
-        if((void *)root >= old){
+        if((void *)root > old){
             old_mark(_roots[i]);
         }
     }
@@ -421,7 +432,6 @@ void old_sweep(){
     }
 }
 char *gc_get_state(){
-    char* buf[256] = {0};
     printf("Heap Usage:\n");
     printf("New Generation\n");
     printf("Eden Space:\n");
@@ -438,7 +448,7 @@ char *gc_get_state(){
     printf("   capacity = %d\n",survivor_size);
     printf("   used     = %d\n",0);
     printf("   free     = %d\n",survivor_size);
-    printf("   %g%% used\n",0*100);
+    printf("   %g%% used\n",0);
     printf("Old Generation\n");
 
     int old_used = 0;
@@ -453,7 +463,7 @@ char *gc_get_state(){
     printf("   free     = %d\n",old_size-old_used);
     printf("   %g%% used\n",(double)old_used/old_size*100);
 
-    return buf;
+    return NULL;
 }
 
 void gc() {
